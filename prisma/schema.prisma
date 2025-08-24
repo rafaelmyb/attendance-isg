@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ServiceRecord {
+  id                 String   @id @default(cuid())
+  date               DateTime
+  time               String
+  campusId           String
+  serviceType        String
+  serviceName        String
+  minister           String
+  presentesTotal     Int
+  membrosPresentes   Int
+  membrosAdultos     Int
+  membrosCriancas    Int
+  visitantesTotal    Int
+  visitantesCriancas Int
+  visitantesAdultos  Int
+  decisoesAdultos    Int
+  decisoesCriancas   Int
+  voluntarios        Int
+  carrosInterno      Int
+  motosInterno       Int
+  carrosRua          Int
+  motosRua           Int
+  responsavelAta     String
+  observacoes        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("service_records")
+}
+
+model Campus {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("campuses")
+}
