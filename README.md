@@ -59,7 +59,7 @@ A modern attendance tracking and BI system for ISG (Igreja do Senhor Jesus) buil
    # Generate Prisma client
    npm run db:generate
 
-   # Push schema to database
+   # Push schema to database (starts with clean database)
    npm run db:push
 
    # Or run migrations (recommended for production)

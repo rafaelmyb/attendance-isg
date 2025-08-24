@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable, getDatabaseErrorResponse } from "@/lib/db-check";
+
+// Force dynamic rendering to prevent build-time analysis
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    // Skip database operations during build time
-    if (!process.env.POSTGRES_URL) {
-      return NextResponse.json(
-        { error: "Database not configured" },
-        { status: 503 }
-      );
+    // Check database availability
+    if (!isDatabaseAvailable()) {
+      const { error, status } = getDatabaseErrorResponse();
+      return NextResponse.json({ error }, { status });
     }
 
     const { searchParams } = new URL(request.url);
@@ -45,12 +48,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Skip database operations during build time
-    if (!process.env.POSTGRES_URL) {
-      return NextResponse.json(
-        { error: "Database not configured" },
-        { status: 503 }
-      );
+    // Check database availability
+    if (!isDatabaseAvailable()) {
+      const { error, status } = getDatabaseErrorResponse();
+      return NextResponse.json({ error }, { status });
     }
 
     const body = await request.json();

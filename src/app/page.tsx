@@ -53,7 +53,7 @@ import {
 } from "@/lib/constants";
 import { buildMetrics } from "@/lib/metrics";
 import { exportCSV } from "@/lib/export";
-import { seed } from "@/lib/demo-data";
+
 import { ServiceRecord, FormData } from "@/types";
 import { labelOf } from "@/lib/utils";
 import {
@@ -66,9 +66,64 @@ import {
 } from "@/components/ui-helpers";
 
 export default function ISGAttendanceApp() {
-  const [records, setRecords] = useState<ServiceRecord[]>(seed);
+  const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeCampus, setActiveCampus] = useState(defaultCampus.id);
+
+  // Fetch records from API
+  const fetchRecords = async () => {
+    try {
+      const response = await fetch("/api/records");
+      if (response.ok) {
+        const data = await response.json();
+        const transformedRecords = data.map(transformRecord);
+        setRecords(transformedRecords);
+      }
+    } catch (error) {
+      console.error("Error fetching records:", error);
+    }
+  };
+
+  // Transform database record to UI format
+  const transformRecord = (dbRecord: any): ServiceRecord => ({
+    id: dbRecord.id,
+    date: new Date(dbRecord.date).toISOString().split("T")[0],
+    time: dbRecord.time,
+    campusId: dbRecord.campusId,
+    serviceType: dbRecord.serviceType,
+    serviceName: dbRecord.serviceName,
+    minister: dbRecord.minister,
+    totals: {
+      presentesTotal: dbRecord.presentesTotal,
+      membrosPresentes: dbRecord.membrosPresentes,
+      membrosAdultos: dbRecord.membrosAdultos,
+      membrosCriancas: dbRecord.membrosCriancas,
+      visitantesTotal: dbRecord.visitantesTotal,
+      visitantesCriancas: dbRecord.visitantesCriancas,
+      visitantesAdultos: dbRecord.visitantesAdultos,
+      decisoesAdultos: dbRecord.decisoesAdultos,
+      decisoesCriancas: dbRecord.decisoesCriancas,
+      voluntarios: dbRecord.voluntarios,
+    },
+    estacionamento: {
+      interno: {
+        carros: dbRecord.carrosInterno,
+        motos: dbRecord.motosInterno,
+      },
+      rua: {
+        carros: dbRecord.carrosRua,
+        motos: dbRecord.motosRua,
+      },
+    },
+    responsavelAta: dbRecord.responsavelAta,
+    observacoes: dbRecord.observacoes,
+    createdAt: dbRecord.createdAt,
+  });
+
+  // Load records on component mount
+  React.useEffect(() => {
+    fetchRecords();
+  }, []);
 
   const [form, setForm] = useState<FormData>({
     date: new Date().toISOString().slice(0, 10),
@@ -102,18 +157,21 @@ export default function ISGAttendanceApp() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    // Simulate network latency
-    setTimeout(() => {
-      const rec: ServiceRecord = {
-        id: uid(),
-        date: form.date,
-        time: form.time,
-        campusId: form.campusId,
-        serviceType: form.serviceType,
-        serviceName:
-          form.serviceName || labelOf(serviceTypes, form.serviceType),
-        minister: form.minister,
-        totals: {
+
+    try {
+      const response = await fetch("/api/records", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: form.date,
+          time: form.time,
+          campusId: form.campusId,
+          serviceType: form.serviceType,
+          serviceName:
+            form.serviceName || labelOf(serviceTypes, form.serviceType),
+          minister: form.minister,
           presentesTotal: Number(form.presentesTotal) || 0,
           membrosPresentes: Number(form.membrosPresentes) || 0,
           membrosAdultos: Number(form.membrosAdultos) || 0,
@@ -124,24 +182,55 @@ export default function ISGAttendanceApp() {
           decisoesAdultos: Number(form.decisoesAdultos) || 0,
           decisoesCriancas: Number(form.decisoesCriancas) || 0,
           voluntarios: Number(form.voluntarios) || 0,
-        },
-        estacionamento: {
-          interno: {
-            carros: Number(form.carrosInterno) || 0,
-            motos: Number(form.motosInterno) || 0,
-          },
-          rua: {
-            carros: Number(form.carrosRua) || 0,
-            motos: Number(form.motosRua) || 0,
-          },
-        },
-        responsavelAta: form.responsavelAta,
-        observacoes: form.observacoes,
-        createdAt: new Date().toISOString(),
-      };
-      setRecords((r) => [rec, ...r]);
+          carrosInterno: Number(form.carrosInterno) || 0,
+          motosInterno: Number(form.motosInterno) || 0,
+          carrosRua: Number(form.carrosRua) || 0,
+          motosRua: Number(form.motosRua) || 0,
+          responsavelAta: form.responsavelAta,
+          observacoes: form.observacoes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save record");
+      }
+
+      const newRecord = await response.json();
+
+      // Refresh the records list
+      await fetchRecords();
+
+      // Reset form
+      setForm({
+        date: new Date().toISOString().slice(0, 10),
+        time: "19:00",
+        campusId: defaultCampus.id,
+        serviceType: "celebracao",
+        serviceName: "",
+        minister: "",
+        presentesTotal: "",
+        membrosPresentes: "",
+        membrosAdultos: "",
+        membrosCriancas: "",
+        visitantesTotal: "",
+        visitantesCriancas: "",
+        visitantesAdultos: "",
+        decisoesAdultos: "",
+        decisoesCriancas: "",
+        voluntarios: "",
+        carrosInterno: "",
+        motosInterno: "",
+        carrosRua: "",
+        motosRua: "",
+        responsavelAta: "",
+        observacoes: "",
+      });
+    } catch (error) {
+      console.error("Error saving record:", error);
+      alert("Erro ao salvar o registro. Tente novamente.");
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   }
 
   const metrics = useMemo(
