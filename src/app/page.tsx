@@ -55,7 +55,7 @@ import { buildMetrics } from "@/lib/metrics";
 import { exportCSV } from "@/lib/export";
 import { seed } from "@/lib/demo-data";
 import { ServiceRecord, FormData } from "@/types";
-import { labelOf, numBlock } from "@/lib/utils";
+import { labelOf } from "@/lib/utils";
 import {
   Labeled,
   NumberField,
@@ -113,24 +113,27 @@ export default function ISGAttendanceApp() {
         serviceName:
           form.serviceName || labelOf(serviceTypes, form.serviceType),
         minister: form.minister,
-        totals: numBlock({
-          presentesTotal: form.presentesTotal,
-          membrosPresentes: form.membrosPresentes,
-          membrosAdultos: form.membrosAdultos,
-          membrosCriancas: form.membrosCriancas,
-          visitantesTotal: form.visitantesTotal,
-          visitantesCriancas: form.visitantesCriancas,
-          visitantesAdultos: form.visitantesAdultos,
-          decisoesAdultos: form.decisoesAdultos,
-          decisoesCriancas: form.decisoesCriancas,
-          voluntarios: form.voluntarios,
-        }),
+        totals: {
+          presentesTotal: Number(form.presentesTotal) || 0,
+          membrosPresentes: Number(form.membrosPresentes) || 0,
+          membrosAdultos: Number(form.membrosAdultos) || 0,
+          membrosCriancas: Number(form.membrosCriancas) || 0,
+          visitantesTotal: Number(form.visitantesTotal) || 0,
+          visitantesCriancas: Number(form.visitantesCriancas) || 0,
+          visitantesAdultos: Number(form.visitantesAdultos) || 0,
+          decisoesAdultos: Number(form.decisoesAdultos) || 0,
+          decisoesCriancas: Number(form.decisoesCriancas) || 0,
+          voluntarios: Number(form.voluntarios) || 0,
+        },
         estacionamento: {
-          interno: numBlock({
-            carros: form.carrosInterno,
-            motos: form.motosInterno,
-          }),
-          rua: numBlock({ carros: form.carrosRua, motos: form.motosRua }),
+          interno: {
+            carros: Number(form.carrosInterno) || 0,
+            motos: Number(form.motosInterno) || 0,
+          },
+          rua: {
+            carros: Number(form.carrosRua) || 0,
+            motos: Number(form.motosRua) || 0,
+          },
         },
         responsavelAta: form.responsavelAta,
         observacoes: form.observacoes,

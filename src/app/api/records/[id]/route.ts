@@ -6,6 +6,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Skip database operations during build time
+    if (!process.env.POSTGRES_URL) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      );
+    }
+
     const record = await prisma.serviceRecord.findUnique({
       where: { id: params.id },
     });
@@ -29,6 +37,14 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Skip database operations during build time
+    if (!process.env.POSTGRES_URL) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
 
     const record = await prisma.serviceRecord.update({
@@ -74,6 +90,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Skip database operations during build time
+    if (!process.env.POSTGRES_URL) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      );
+    }
+
     await prisma.serviceRecord.delete({
       where: { id: params.id },
     });

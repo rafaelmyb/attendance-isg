@@ -24,7 +24,7 @@ export function exportCSV(data: ServiceRecord[]) {
     carrosRua: r.estacionamento.rua.carros,
     motosRua: r.estacionamento.rua.motos,
     responsavelAta: r.responsavelAta,
-    observacoes: r.observacoes?.replaceAll("\n", " ") || "",
+    observacoes: r.observacoes,
   }));
 
   const header = Object.keys(rows[0] || { id: "id" }).join(",");
